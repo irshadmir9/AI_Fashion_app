@@ -7,16 +7,29 @@ import {
   StyleSheet,
   Alert,
   Platform,
-
+  ScrollView,
 } from 'react-native';
+
+interface Item {
+  type: string;
+  color: string;
+  brand: string;
+}
 
 export default function App() {
   const [type, setType] = useState('');
   const [color, setColor] = useState('');
   const [brand, setBrand] = useState('');
 
+  const [closet, setCloset] = useState<Item[]>([]);
+
   const onSubmit = async () => {
-    const baseUrl = 'http://172.26.224.1:8000';
+    const baseUrl = 
+      Platform.OS === 'web'
+        ? 'http://127.0.0.1:8000'
+        : Platform.OS === 'ios'
+        ? 'http://127.0.0.1:8000'
+        : 'http://10.0.2.2:8000';
 
     try {
       console.log('Submitting item:', { type, color, brand });
@@ -35,6 +48,23 @@ export default function App() {
     }
   };
 
+  const loadItems = async () => {
+    try {
+      const baseUrl =
+        Platform.OS ==='web'
+          ? 'http://127.0.0.1:8000'
+          : Platform.OS === 'ios'
+          ? 'http://127.0.0.1:8000'
+          : 'http://10.0.2.2:8000'; 
+
+        const res = await fetch(`${baseUrl}/items`);
+        const data: Item[] = await res.json();
+        setCloset(data);
+    } catch (e: any) {
+      Alert.alert('Error loading items', e.message);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Add a wardrobe item</Text>
@@ -49,18 +79,31 @@ export default function App() {
         value={color}
         onChangeText={setColor}
         style={styles.input}
-        />
-        <TextInput
-          placeholder="Brand (e.g. Nike)"
-          value={brand}
-          onChangeText={setBrand}
-          style={styles.input}
-          />
-          <Button
-            title="Add Item"
-            onPress={onSubmit}
-            disabled={!type || !color || !brand}
-            />
+      />
+      <TextInput
+        placeholder="Brand (e.g. Nike)"
+        value={brand}
+        onChangeText={setBrand}
+        style={styles.input}
+      />
+      <Button
+        title="Add Item"
+        onPress={onSubmit}
+        disabled={!type || !color || !brand}
+      />
+      
+      <Button 
+        title="Show My Closet"
+        onPress={loadItems}
+      />
+
+      <ScrollView style={styles.list}>
+        {closet.map((it, idx) => (
+          <Text key={idx} style={styles.listItem}>
+            • {it.type} — {it.color} — {it.brand}
+          </Text>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -78,4 +121,11 @@ const styles = StyleSheet.create({
     borderRadius: 6
   },
   
+  list: {
+    marginTop: 20,
+  },
+  listItem: {
+    paddingVertical: 6,
+    fontSize: 16,
+  },
 });
