@@ -16,12 +16,16 @@ interface Item {
   brand: string;
 }
 
+type Outfit = Item[];
+
 export default function App() {
   const [type, setType] = useState('');
   const [color, setColor] = useState('');
   const [brand, setBrand] = useState('');
 
   const [closet, setCloset] = useState<Item[]>([]);
+
+  const [outfits, setOutfits] = useState<Outfit[]>([]);
 
   const onSubmit = async () => {
     const baseUrl = 
@@ -65,17 +69,34 @@ export default function App() {
     }
   };
 
+  const suggestOutfits = async () => {
+    try {
+      const baseUrl = 
+      Platform.OS === 'web'
+          ? 'http://127.0.0.1:8000'
+          : Platform.OS === 'ios'
+          ? 'http://127.0.0.1:8000'
+          : 'http://10.0.2.2:8000';
+
+      const res = await fetch(`${baseUrl}/outfits`);
+      const json = await res.json() as { outfits: Outfit[] };
+      setOutfits(json.outfits);
+    } catch (e: any) {
+      Alert.alert('Error fetching outfits', e.message);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Add a wardrobe item</Text>
       <TextInput
-        placeholder="Type (e.g. hoodie)"
+        placeholder="Type (e.g. Hoodie)"
         value={type}
         onChangeText={setType}
         style={styles.input}
       />
       <TextInput
-        placeholder="Color (e.g. red)"
+        placeholder="Color (e.g. Red)"
         value={color}
         onChangeText={setColor}
         style={styles.input}
@@ -92,16 +113,36 @@ export default function App() {
         disabled={!type || !color || !brand}
       />
       
-      <Button 
-        title="Show My Closet"
-        onPress={loadItems}
-      />
-
+      <View style={{ marginTop: 20 }}>
+        <Button 
+          title="Show My Closet"
+          onPress={loadItems}
+        />
+      </View>
       <ScrollView style={styles.list}>
         {closet.map((it, idx) => (
           <Text key={idx} style={styles.listItem}>
             • {it.type} — {it.color} — {it.brand}
           </Text>
+        ))}
+      </ScrollView>
+
+      <View style={{ marginTop: 20 }}>
+        <Button
+          title="Suggest Outfits"
+          onPress={suggestOutfits}
+        />
+      </View>
+      <ScrollView style={styles.list}>
+        {outfits.map((of, i) => (
+          <View key={i} style={styles.outfitCard}>
+            <Text style={styles.outfitTitle}>Outfit {i + 1}</Text>
+            {of.map((it, j) => (
+              <Text key={j} style={styles.listItem}>
+                • {it.type} ({it.color}, {it.brand})
+              </Text>
+            ))}
+          </View>
         ))}
       </ScrollView>
     </View>
@@ -114,18 +155,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#fff'
   },
-  title: { fontSize: 20, marginBottom: 16, textAlign: 'center' },
+  title: { 
+    fontSize: 20, 
+    marginBottom: 16, 
+    textAlign: 'center' 
+  },
   input: {
     borderWidth: 1, borderColor: '#ccc',
     padding: 12, marginBottom: 12,
     borderRadius: 6
   },
-  
   list: {
-    marginTop: 20,
+    marginTop: 10,
+    maxHeight: 150,         // optional: limit height
   },
   listItem: {
-    paddingVertical: 6,
+    paddingVertical: 4,
+    fontSize: 16,
+  },
+  outfitCard: {
+    marginTop: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#444',
+    borderRadius: 6,
+  },
+  outfitTitle: {
+    fontWeight: 'bold',
+    marginBottom: 6,
     fontSize: 16,
   },
 });

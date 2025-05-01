@@ -30,11 +30,39 @@ def add_item(item: Item):
 def list_items():
     return items_db
 
+def filter_by_keywords(items: List[Item], keywords: List[str]) -> List[Item]:
+    filtered: List[Item] = []
+    for item in items:
+        item_type = item.type.lower()
+        for k in keywords:
+            if k in item_type:
+                filtered.append(item)
+                break
+    return filtered
+
 TOP_KEYWORDS = ["shirt", "tee", "blouse", "hoodie", "sweater", "t-shirt", "top"]
 BOTTOM_KEYWORDS = ["pants", "jeans", "shorts", "skirt", "trousers"]
 OUTER_KEYWORDS = ["jacket", "coat", "blazer"]
 
 @app.get("/outfits")
 def suggest_outfits(count: int = 3):
+    tops = filter_by_keywords(items_db, TOP_KEYWORDS)
+    bottoms = filter_by_keywords(items_db, BOTTOM_KEYWORDS)
+    outers = filter_by_keywords(items_db, OUTER_KEYWORDS)
 
-    def by_keywords(keywords)
+    outfits = []
+    max_combinations = len(tops) * len(bottoms)
+    for _ in range(min(count, max_combinations)):
+        t = random.choice(tops)
+        b = random.choice(bottoms)
+        if t.color.lower() == b.color.lower() and len(bottoms) > 1:
+            b = random.choice(
+                [x for x in bottoms 
+                if x.color.lower() != t.color.lower()])
+        outfit = [t, b]
+        if outers and random.random() < 0.5:
+            outfit.append(random.choice(outers))
+        outfits.append(outfit)
+
+    return {"outfits": outfits}
+    
