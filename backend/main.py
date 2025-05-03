@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 from fastapi.middleware.cors import CORSMiddleware
 import random
@@ -18,6 +18,7 @@ class Item(BaseModel):
     type: str
     color: str
     brand: str
+    tags: List[str] = Field(default_factory=list)
 
 items_db: List[Item] = []
 
@@ -45,11 +46,26 @@ BOTTOM_KEYWORDS = ["pants", "jeans", "shorts", "skirt", "trousers"]
 OUTER_KEYWORDS = ["jacket", "coat", "blazer"]
 
 @app.get("/outfits")
-def suggest_outfits(count: int = 3):
+def suggest_outfits(count: int = 3, occasion: str = None):
     tops = filter_by_keywords(items_db, TOP_KEYWORDS)
     bottoms = filter_by_keywords(items_db, BOTTOM_KEYWORDS)
     outers = filter_by_keywords(items_db, OUTER_KEYWORDS)
 
+    if occasion:
+        occ = occasion.lower()
+        def filter_by_tag(items: List[Item], tag: str) -> List[Item]:
+            filtered: List[Item] = []
+            for item in items:
+                for t in item.tags:
+                    if t.lower() == tag.lower():
+                        filtered.append(item)
+                        break
+            return filtered
+        
+        tops = filter_by_tag(tops, occ) or tops
+        bottoms = filter_by_tag(bottoms, occ) or bottoms
+        outers = filter_by_tag(outers, occ) or outers
+        
     outfits = []
     max_combinations = len(tops) * len(bottoms)
     for _ in range(min(count, max_combinations)):

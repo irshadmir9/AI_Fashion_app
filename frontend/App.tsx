@@ -9,11 +9,17 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import * as Location from 'expo-location';
+import { useEffect } from 'react';
+import { OPENWEATHER_API_KEY } from '@env';
+
+const apiKey = OPENWEATHER_API_KEY;
 
 interface Item {
   type: string;
   color: string;
   brand: string;
+  tags: string[];
 }
 
 type Outfit = Item[];
@@ -22,31 +28,61 @@ export default function App() {
   const [type, setType] = useState('');
   const [color, setColor] = useState('');
   const [brand, setBrand] = useState('');
+  const [tags, setTags] = useState('');
 
   const [closet, setCloset] = useState<Item[]>([]);
-
   const [outfits, setOutfits] = useState<Outfit[]>([]);
+  const [occasionFilter, setOccasionFilter] = useState('');
+
+  const [weather, setWeather] = useState<{ temp: Number; condition: string } | null>(null);
+
+  const baseUrl = Platform.OS === 'web' || Platform.OS === 'ios'
+    ? 'http://127.0.0.1:8000'
+    : 'http://10.0.2.2:8000';
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'Cannot fetch weather without location');
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync();
+      fetchWeather(loc.coords.latitude, loc.coords.longitude);
+    })();
+  }, []);
+
+  const fetchWeather = async (lat: number, lon: number) => {
+    try {
+      const apiKey = 'YOUR_OPENWEATHERMAP_KEY';
+      const res = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`
+      );
+      const json = await res.json();
+      setWeather({
+        temp: json.main.temp,
+        condition: json.weather[0].main.toLowerCase(),
+      });
+    } catch (e: any) {
+      console.error('Weather fetch error', e);
+    }
+  };
 
   const onSubmit = async () => {
-    const baseUrl = 
-      Platform.OS === 'web'
-        ? 'http://127.0.0.1:8000'
-        : Platform.OS === 'ios'
-        ? 'http://127.0.0.1:8000'
-        : 'http://10.0.2.2:8000';
-
     try {
-      console.log('Submitting item:', { type, color, brand });
       const res = await fetch(`${baseUrl}/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, color, brand }),
+        body: JSON.stringify({ 
+          type, 
+          color, 
+          brand, 
+          tags: tags.split(',').map(t => t.trim()).filter(t => t),
+        }),
       });
-      console.log('Raw response:', res);
       const data = await res.json();
-      console.log('Parsed JSON:', data);
       Alert.alert('✅ Success', `${data.item.type} added!`);
-      setType(''); setColor(''); setBrand('');
+      setType(''); setColor(''); setBrand(''); setTags('');
     } catch (e: any) {
       Alert.alert('❌ Error', e.message);
     }
@@ -54,13 +90,6 @@ export default function App() {
 
   const loadItems = async () => {
     try {
-      const baseUrl =
-        Platform.OS ==='web'
-          ? 'http://127.0.0.1:8000'
-          : Platform.OS === 'ios'
-          ? 'http://127.0.0.1:8000'
-          : 'http://10.0.2.2:8000'; 
-
         const res = await fetch(`${baseUrl}/items`);
         const data: Item[] = await res.json();
         setCloset(data);
@@ -69,17 +98,13 @@ export default function App() {
     }
   };
 
-  const suggestOutfits = async () => {
+  const suggestOutfits = async (occasion = '') => {
     try {
-      const baseUrl = 
-      Platform.OS === 'web'
-          ? 'http://127.0.0.1:8000'
-          : Platform.OS === 'ios'
-          ? 'http://127.0.0.1:8000'
-          : 'http://10.0.2.2:8000';
-
-      const res = await fetch(`${baseUrl}/outfits`);
-      const json = await res.json() as { outfits: Outfit[] };
+      const url = occasion
+        ? `${baseUrl}/outfits?occasion=${encodeURIComponent(occasion)}`
+        : `${baseUrl}/outfits`;
+      const res = await fetch(url);
+      const json = await res.json() as { outfits: Item[][] };
       setOutfits(json.outfits);
     } catch (e: any) {
       Alert.alert('Error fetching outfits', e.message);
@@ -89,48 +114,36 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Add a wardrobe item</Text>
-      <TextInput
-        placeholder="Type (e.g. Hoodie)"
-        value={type}
-        onChangeText={setType}
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Color (e.g. Red)"
-        value={color}
-        onChangeText={setColor}
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Brand (e.g. Nike)"
-        value={brand}
-        onChangeText={setBrand}
-        style={styles.input}
-      />
-      <Button
-        title="Add Item"
-        onPress={onSubmit}
-        disabled={!type || !color || !brand}
-      />
+      <TextInput placeholder="Type (e.g. Hoodie)"
+        value={type} onChangeText={setType} style={styles.input} />
+      <TextInput placeholder="Color (e.g. Red)"
+        value={color} onChangeText={setColor} style={styles.input} />
+      <TextInput placeholder="Brand (e.g. Nike)"
+        value={brand} onChangeText={setBrand} style={styles.input} />
+      <TextInput placeholder="Brand (e.g. work, casual)"
+        value={tags} onChangeText={setTags} style={styles.input} />
+      <Button title="Add Item" onPress={onSubmit}
+        disabled={!type || !color || !brand} />
       
-      <View style={{ marginTop: 20 }}>
-        <Button 
-          title="Show My Closet"
-          onPress={loadItems}
-        />
+      <View style={{ marginTop: 20   }}>
+        <Button title="Show My Closet" onPress={loadItems} />
       </View>
       <ScrollView style={styles.list}>
         {closet.map((it, idx) => (
           <Text key={idx} style={styles.listItem}>
             • {it.type} — {it.color} — {it.brand}
+            {it.tags.length ? ` [${it.tags.join(', ')}]` : ''}
           </Text>
         ))}
       </ScrollView>
 
+      <TextInput placeholder="Filter Occasion (e.g. work)"
+        value={occasionFilter} onChangeText={setOccasionFilter} style={styles.input} />
+
       <View style={{ marginTop: 20 }}>
         <Button
           title="Suggest Outfits"
-          onPress={suggestOutfits}
+          onPress={() => suggestOutfits(occasionFilter)}
         />
       </View>
       <ScrollView style={styles.list}>
@@ -150,39 +163,11 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1, padding: 20,
-    justifyContent: 'center',
-    backgroundColor: '#fff'
-  },
-  title: { 
-    fontSize: 20, 
-    marginBottom: 16, 
-    textAlign: 'center' 
-  },
-  input: {
-    borderWidth: 1, borderColor: '#ccc',
-    padding: 12, marginBottom: 12,
-    borderRadius: 6
-  },
-  list: {
-    marginTop: 10,
-    maxHeight: 150,         // optional: limit height
-  },
-  listItem: {
-    paddingVertical: 4,
-    fontSize: 16,
-  },
-  outfitCard: {
-    marginTop: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#444',
-    borderRadius: 6,
-  },
-  outfitTitle: {
-    fontWeight: 'bold',
-    marginBottom: 6,
-    fontSize: 16,
-  },
+  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  title:     { fontSize: 20, marginBottom: 16, textAlign: 'center' },
+  input:     { borderWidth: 1, borderColor: '#ccc', padding: 12, marginBottom: 12, borderRadius: 6 },
+  list:      { marginTop: 10, maxHeight: 150 },
+  listItem:  { paddingVertical: 4, fontSize: 16 },
+  outfitCard:{ marginTop: 16, padding: 12, borderWidth: 1, borderColor: '#444', borderRadius: 6 },
+  outfitTitle:{ fontWeight: 'bold', marginBottom: 6, fontSize: 16 },
 });
