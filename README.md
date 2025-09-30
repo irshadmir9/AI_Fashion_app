@@ -4,11 +4,6 @@ An AI-powered virtual stylist that helps you digitize your closet and suggests c
 
 ---
 
-## 📸 Demo
-*(Here you can add a screenshot or a short screen recording GIF of your app in action)*
-
----
-
 ## 🚀 Features
 - **AI-Powered Analysis:** Upload an image of a clothing item and let a powerful AI model analyze its properties, including type, color, formality, and more.
 - **Digital Closet:** All analyzed clothing is saved to a local database, creating your own personal digital closet.
