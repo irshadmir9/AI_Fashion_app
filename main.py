@@ -1,3 +1,4 @@
+from config import API_KEY
 import google.generativeai as genai
 import PIL.Image
 from fastapi import FastAPI, UploadFile, File
@@ -42,9 +43,6 @@ def is_neutral(color: str):
 # Run the setup function right when the app starts
 setup_database()
 # --- END DATABASE SETUP ---
-
-# --- PASTE YOUR API KEY HERE ---
-API_KEY = 'AIzaSyBqY0OEEhTsVGD6H_nSfET-vMu4C4Q4koE'
 
 genai.configure(api_key=API_KEY)
 
