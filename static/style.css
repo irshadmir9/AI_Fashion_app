@@ -1,0 +1,90 @@
+/* Basic setup for the whole page */
+body {
+    margin: 0;
+    font-family: sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* This is our main "phone screen" container */
+.container {
+    width: 390px;  /* Width of an iPhone 14 Pro */
+    height: 844px; /* Height of an iPhone 14 Pro */
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Hides anything that goes outside the container */
+}
+
+/* --- Header Styling --- */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+header button {
+    font-size: 24px;
+    background: none;
+    border: none;
+}
+
+header img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+/* --- Main Content Styling --- */
+main {
+    flex-grow: 1; /* This makes the main content fill the available space */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+main h2 {
+    text-align: center;
+}
+
+main div {
+    margin-bottom: 15px;
+}
+
+main button, main select, main input {
+    width: 250px;
+    padding: 12px;
+    font-size: 16px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+/* Style the primary button */
+#suggestButton {
+    background-color: #333;
+    color: white;
+}
+
+/* --- Bottom Navigation Styling --- */
+nav {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+}
+
+nav button {
+    background: none;
+    border: none;
+    font-size: 28px;
+}

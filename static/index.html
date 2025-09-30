@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Fashion AI</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <button id="menuButton">☰</button>
+            <img id="profilePic" src="placeholder.png" alt="Profile">
+        </header>
+
+        <main>
+            <h2>Get an Outfit Suggestion</h2>
+            <div>
+                <label for="occasion">Occasion:</label>
+                <select id="occasionInput">
+                    <option value="everyday">Everyday</option>
+                    <option value="work">Work</option>
+                    <option value="weekend">Weekend</option>
+                </select>
+            </div>
+            <div>
+                <label for="season">Season:</label>
+                <select id="seasonInput">
+                    <option value="Spring">Spring</option>
+                    <option value="Summer">Summer</option>
+                    <option value="Fall">Fall</option>
+                    <option value="Winter">Winter</option>
+                </select>
+            </div>
+
+            <button id="suggestButton">Generate Outfit</button>
+            <div id="outfitResults"></div>
+
+            <input type="file" id="imageInput">
+            <button id="uploadButton">Upload</button>
+        </main>
+
+        <nav>
+            <button id="homeButton">🏠</button>
+            <button id="closetButton">🚪</button>
+            <button id="profileButton">👤</button>
+            <button id="settingsButton">⚙️</button>
+        </nav>
+    </div>
+    
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
